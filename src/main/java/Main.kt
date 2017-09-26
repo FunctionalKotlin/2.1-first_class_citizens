@@ -4,27 +4,30 @@ import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
 import java.net.URL
 
-fun parseAsJson(string: String): Map<String, Any?> =
-    StringBuilder(string).let { Parser().parse(it) as JsonObject }.map
+interface MyParser {
+    fun parse(string: String): Map<String, Any?>
+}
 
-fun parseAsXML(string: String): Map<String, Any?> = emptyMap()
+class JsonParser: MyParser {
+    override fun parse(string: String): Map<String, Any?> =
+        StringBuilder(string).let { Parser().parse(it) as JsonObject }.map
+}
 
-fun parseAsHTML(string: String): Map<String, Any?> = emptyMap()
+class XMLParser: MyParser {
+    override fun parse(string: String): Map<String, Any?> = emptyMap()
+}
 
-fun dataFrom(url: URL, parserType: Int): Map<String, Any?> =
-    url.readText().let {
-        when (parserType) {
-            1 -> parseAsJson(it)
-            2 -> parseAsHTML(it)
-            3 -> parseAsXML(it)
-            else -> emptyMap()
-        }
-    }
+class HTMLParser: MyParser {
+    override fun parse(string: String): Map<String, Any?> = emptyMap()
+}
+
+fun dataFrom(url: URL, parser: MyParser): Map<String, Any?> =
+    url.readText().let { parser.parse(it) }
 
 fun main(args: Array<String>) {
     val url = URL("https://api.github.com")
 
-    val jsonObject = dataFrom(url, 1)
+    val jsonObject = dataFrom(url, JsonParser())
 
     println(jsonObject)
 }
